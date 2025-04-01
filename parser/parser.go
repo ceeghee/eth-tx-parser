@@ -1,15 +1,15 @@
-package main
+package parser
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"math/big"
 	"net/http"
 	"sync"
 	"time"
 )
+
 
 const ethRPCURL = "https://ethereum-rpc.publicnode.com"
 
@@ -40,7 +40,7 @@ type TxParser struct {
 	txRecords    map[string][]Transaction
 }
 
-func (tp *TxParser) monitorFoLatestBlock() {
+func (tp *TxParser) MonitorForLatestBlock() {
 	for {
 		newBlock := tp.fetchLatestBlock()
 		if newBlock > tp.latestBlock {
@@ -67,14 +67,6 @@ func (tp *TxParser) CurrentBlock() int {
 	return tp.latestBlock
 }
 
-
-func (tp *TxParser) Transactions(addr string) []Transaction {
-	tp.lock.Lock()
-	defer tp.lock.Unlock()
-	return tp.txRecords[addr]
-}
-
-
 func (tp *TxParser) Subscribe(addr string) bool {
 	tp.lock.Lock()
 	defer tp.lock.Unlock()
@@ -83,6 +75,12 @@ func (tp *TxParser) Subscribe(addr string) bool {
 	}
 	tp.subscribers[addr] = true
 	return true
+}
+
+func (tp *TxParser) Transactions(addr string) []Transaction {
+	tp.lock.Lock()
+	defer tp.lock.Unlock()
+	return tp.txRecords[addr]
 }
 
 func (tp *TxParser) fetchLatestBlock() int {
@@ -114,38 +112,4 @@ func sendRPCRequest(req RPCRequest) (*RPCResponse, error) {
 		return nil, err
 	}
 	return &rpcResp, nil
-}
-
-func main() {
-	parser := TransactionParser()
-	go parser.monitorFoLatestBlock()
-
-	http.HandleFunc("/subscribe", func(w http.ResponseWriter, r *http.Request) {
-		addr := r.URL.Query().Get("address")
-		if addr == "" {
-			http.Error(w, "Address is required", http.StatusBadRequest)
-			return
-		}
-		if parser.Subscribe(addr) {
-			fmt.Fprintf(w, "Address Successfully subscribed: %s", addr)
-		} else {
-			fmt.Fprintf(w, "Address is already subscribed!")
-		}
-	})
-
-	http.HandleFunc("/current_block", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "%d", parser.CurrentBlock())
-	})
-
-	http.HandleFunc("/transactions", func(w http.ResponseWriter, r *http.Request) {
-		addr := r.URL.Query().Get("address")
-		if addr == "" {
-			http.Error(w, "Address is missing", http.StatusBadRequest)
-			return
-		}
-		json.NewEncoder(w).Encode(parser.Transactions(addr))
-	})
-
-	log.Println("Server running on port :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }

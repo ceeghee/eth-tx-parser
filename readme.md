@@ -22,7 +22,7 @@ This project implements an Ethereum transaction parser that monitors the blockch
    ```
 2. Run the application:
    ```sh
-   go run eth-tx-parser.go
+   go run main.go
    ```
 3. The server starts on `http://localhost:8080`
 
