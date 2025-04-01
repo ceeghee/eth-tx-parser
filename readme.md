@@ -22,7 +22,7 @@ This project implements an Ethereum transaction parser that monitors the blockch
    ```
 2. Run the application:
    ```sh
-   go run main.go
+   go run eth-tx-parser.go
    ```
 3. The server starts on `http://localhost:8080`
 
@@ -46,10 +46,10 @@ curl -X GET "http://localhost:8080/transactions?address=0xYourEthereumAddress"
 ```json
 [
   {
-		"from": "0xSenderAddress",
-    "value": "1000000000000000000"
-    "hash": "0xTransactionHash",
-    "to": "0xYourEthereumAddress",
+		"from": "senderEthAddress",
+    "value": "0.0004",
+    "hash": "transaction hash",
+    "to": "receiverEthAddress",
   }
 ]
 ```
